@@ -1,5 +1,4 @@
-import requests
-import json
+import requests, json
 
 r = requests.get('https://jsonplaceholder.typicode.com/posts/')
 data = r.json()
