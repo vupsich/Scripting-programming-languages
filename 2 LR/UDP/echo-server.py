@@ -1,9 +1,5 @@
 import socket
 
-'''AF_INET is the Internet address family for IPv4. 
-   SOCK_DGRAM is the socket type for UDP,
-   the protocol that will be used to transport messages in the network.'''
-
 HOST = "127.0.0.1"  # localhost
 PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
 
@@ -12,9 +8,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
     print(f"Connected by {HOST}:{PORT}")
 
     while True:
-        # Принимаем данные и адрес клиента
-        data, addr = s.recvfrom(1024)  # Максимальный размер сообщения 1024 байта
-        print(f"Сообщение от клиента {addr}: {data.decode()}")
         
-        # Отправляем обратно то же сообщение клиенту
+        data, addr = s.recvfrom(1024)  
+        print(f"Message from client {addr}: {data.decode()}")
+        
+        if data.decode() == "Exit":
+            print("The server is shutting down")
+            break
+        
         s.sendto(data, addr)
