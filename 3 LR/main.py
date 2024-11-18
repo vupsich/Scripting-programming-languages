@@ -71,7 +71,6 @@ def get_all_posts():
 
 
 
-
 # по заданию
 create_db()  
 posts = fetch_posts()  
