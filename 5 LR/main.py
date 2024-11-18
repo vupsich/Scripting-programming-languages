@@ -15,12 +15,12 @@ class DataLoader:
     async def fetch_data(self, url, progress_callback):
         try:
             print(f"Запрос данных с {url}...")
-            await asyncio.sleep(2)  # Имитация задержки
+            await asyncio.sleep(2)
             response = await asyncio.to_thread(requests.get, url)
             response.raise_for_status()
             data = response.json()
             print(f"Получено {len(data)} записей с сервера.")
-            progress_callback(50)  # Обновляем прогресс до 50%
+            progress_callback(50)
             return data
         except requests.exceptions.RequestException as e:
             print(f"Ошибка при запросе: {e}")
@@ -33,7 +33,7 @@ class DataLoader:
 class DataSaveThread(QThread):
     progress_updated = pyqtSignal(int)
     save_finished = pyqtSignal(bool)
-    all_data_exists = pyqtSignal()  # Новый сигнал для уведомления, что все данные уже есть
+    all_data_exists = pyqtSignal()
 
     def __init__(self, data, db_path):
         super().__init__()
@@ -46,7 +46,7 @@ class DataSaveThread(QThread):
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
 
-            # Проверяем, есть ли все данные
+
             all_exist = True
             for post in self.data:
                 cursor.execute("SELECT 1 FROM posts WHERE id = ?", (post["id"],))
@@ -56,11 +56,11 @@ class DataSaveThread(QThread):
 
             if all_exist:
                 print("Все данные уже есть в базе. Сохранение не требуется.")
-                self.all_data_exists.emit()  # Уведомляем об отсутствии необходимости сохранения
+                self.all_data_exists.emit()
                 conn.close()
                 return
 
-            # Сохраняем только новые записи
+
             for index, post in enumerate(self.data):
                 cursor.execute("SELECT 1 FROM posts WHERE id = ?", (post["id"],))
                 if cursor.fetchone():
@@ -72,7 +72,7 @@ class DataSaveThread(QThread):
                 )
                 conn.commit()
 
-                # Обновляем прогресс
+
                 progress = int((index + 1) / len(self.data) * 50) + 50
                 self.progress_updated.emit(progress)
 
@@ -113,7 +113,7 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 1270, 720)
         self.setWindowIcon(QIcon("db-file.png"))
 
-        # Подключение к бд
+
         db_path = "../3 LR/posts.db"
         self.db_path = db_path
         self.db = QSqlDatabase.addDatabase("QSQLITE")
@@ -124,7 +124,7 @@ class MainWindow(QMainWindow):
                                  f"Не удается подключиться к базе данных: {self.db.lastError().text()}")
             sys.exit(1)
 
-        # интерфейс
+
         self.table_view = QTableView()
         self.model = QSqlTableModel()
         self.model.setTable("posts")
@@ -151,7 +151,7 @@ class MainWindow(QMainWindow):
         self.load_data_button = QPushButton("Загрузить данные")
         self.load_data_button.clicked.connect(self.load_data)
 
-        # Прогресс-бар
+
         self.progress_bar = QProgressBar(self)
         self.progress_bar.setRange(0, 100)
 
@@ -172,10 +172,10 @@ class MainWindow(QMainWindow):
         container.setLayout(layout)
         self.setCentralWidget(container)
 
-        # Таймер для периодической загрузки данных
+
         self.timer = QTimer()
         self.timer.timeout.connect(self.load_data)
-        self.timer.start(60000)  # Проверка каждые 60 секунд
+        self.timer.start(60000)
 
     def search(self):
         search_text = self.search_bar.text()
