@@ -33,6 +33,7 @@ class DataLoader:
 class DataSaveThread(QThread):
     progress_updated = pyqtSignal(int)
     save_finished = pyqtSignal(bool)
+    all_data_exists = pyqtSignal()  # Новый сигнал для уведомления, что все данные уже есть
 
     def __init__(self, data, db_path):
         super().__init__()
@@ -45,14 +46,26 @@ class DataSaveThread(QThread):
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
 
+            # Проверяем, есть ли все данные
+            all_exist = True
+            for post in self.data:
+                cursor.execute("SELECT 1 FROM posts WHERE id = ?", (post["id"],))
+                if not cursor.fetchone():
+                    all_exist = False
+                    break
+
+            if all_exist:
+                print("Все данные уже есть в базе. Сохранение не требуется.")
+                self.all_data_exists.emit()  # Уведомляем об отсутствии необходимости сохранения
+                conn.close()
+                return
+
+            # Сохраняем только новые записи
             for index, post in enumerate(self.data):
-                # Проверка, существует ли запись с таким ID
                 cursor.execute("SELECT 1 FROM posts WHERE id = ?", (post["id"],))
                 if cursor.fetchone():
-                    print(f"Запись с ID {post['id']} уже существует. Пропуск...")
                     continue
 
-                # Если записи нет, добавляем её в базу
                 cursor.execute(
                     "INSERT INTO posts (id, user_id, title, body) VALUES (?, ?, ?, ?)",
                     (post["id"], post["userId"], post["title"], post["body"])
@@ -69,6 +82,7 @@ class DataSaveThread(QThread):
         except Exception as e:
             print(f"Ошибка при сохранении данных в базу: {e}")
             self.save_finished.emit(False)
+
 
 
 class DataLoadThread(QThread):
@@ -208,7 +222,12 @@ class MainWindow(QMainWindow):
         self.save_thread = DataSaveThread(data, self.db_path)
         self.save_thread.progress_updated.connect(self.progress_bar.setValue)
         self.save_thread.save_finished.connect(self.on_save_finished)
+        self.save_thread.all_data_exists.connect(self.on_all_data_exists)  # Новый сигнал
         self.save_thread.start()
+
+    def on_all_data_exists(self):
+        print("Все данные уже есть в базе. Ничего не нужно сохранять.")
+        QMessageBox.information(self, "Информация", "Все данные уже есть в базе.")
 
     def on_save_finished(self, success):
         if success:
