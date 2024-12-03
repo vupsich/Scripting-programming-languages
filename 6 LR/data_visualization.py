@@ -15,7 +15,6 @@ class DataVisualizationApp(QMainWindow):
         self.init_ui()
 
     def init_ui(self):
-        # Настройка интерфейса
         self.setWindowTitle("Визуализация данных")
         self.setGeometry(100, 100, 900, 700)
 
@@ -23,25 +22,20 @@ class DataVisualizationApp(QMainWindow):
         self.setCentralWidget(central_widget)
         layout = QVBoxLayout(central_widget)
 
-        # Кнопка загрузки данных
         self.load_button = QPushButton("Загрузить CSV")
         self.load_button.clicked.connect(self.load_data)
         layout.addWidget(self.load_button)
 
-        # Таблица для отображения статистики
         self.stats_table = QTableWidget()
         layout.addWidget(self.stats_table)
 
-        # Выпадающий список выбора типа графика
         self.chart_type_combo = QComboBox()
         self.chart_type_combo.addItems(["Линейный график", "Гистограмма", "Круговая диаграмма"])
         layout.addWidget(self.chart_type_combo)
 
-        # Область отображения графика
         self.canvas = FigureCanvas(plt.figure())
         layout.addWidget(self.canvas)
 
-        # Поля для добавления данных
         add_data_layout = QHBoxLayout()
         self.data_input = QLineEdit()
         self.data_input.setPlaceholderText("Введите строку в формате: Date,Value1,Value2,Category")
@@ -51,13 +45,11 @@ class DataVisualizationApp(QMainWindow):
         add_data_layout.addWidget(self.add_data_button)
         layout.addLayout(add_data_layout)
 
-        # Кнопка построения графика
         self.plot_button = QPushButton("Построить график")
         self.plot_button.clicked.connect(self.plot_data)
         layout.addWidget(self.plot_button)
 
     def load_data(self):
-        # Загрузка данных из CSV
         file_path, _ = QFileDialog.getOpenFileName(self, "Выберите CSV файл", "", "CSV Files (*.csv)")
         if file_path:
             self.data = pd.read_csv(file_path)
@@ -77,12 +69,10 @@ class DataVisualizationApp(QMainWindow):
                     numeric_data[col].median(),
                 ]
 
-            # Обновление таблицы
             self.stats_table.setRowCount(len(stats["Параметр"]))
             self.stats_table.setColumnCount(len(stats))
             self.stats_table.setHorizontalHeaderLabels(stats.keys())
 
-            # Заполнение таблицы
             for row_idx, param in enumerate(stats["Параметр"]):
                 self.stats_table.setItem(row_idx, 0, QTableWidgetItem(param))
                 for col_idx, col_name in enumerate(numeric_data.columns, start=1):
@@ -92,7 +82,7 @@ class DataVisualizationApp(QMainWindow):
 
     def plot_data(self):
         if self.data is not None:
-            plt.clf()  # Полное очищение текущей фигуры
+            plt.clf()
             chart_type = self.chart_type_combo.currentText()
 
             if chart_type == "Линейный график":
@@ -125,7 +115,6 @@ class DataVisualizationApp(QMainWindow):
             self.canvas.draw()
 
     def add_data(self):
-        # Добавление новой строки данных
         if self.data is not None:
             new_row = self.data_input.text().split(",")
             if len(new_row) == len(self.data.columns):
@@ -136,7 +125,6 @@ class DataVisualizationApp(QMainWindow):
                 self.stats_label.setText("Неверный формат данных для добавления!")
 
 
-# Запуск приложения
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     main_window = DataVisualizationApp()
